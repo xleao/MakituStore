@@ -152,8 +152,8 @@ async function initCheckout(){
           return;
         }
       }
-      // Crear nueva orden pendiente
-      const vence = new Date(Date.now()+20*60*1000).toISOString();
+      // Crear nueva orden pendiente (1 minuto para pruebas)
+      const vence = new Date(Date.now()+1*60*1000).toISOString();
       const { data:orden, error:oErr } = await supabaseClient.from('ordenes').insert({ usuario_id: uid, estado: 'pendiente', metodo_pago: metodo, total, vence_en: vence }).select().single();
       if(oErr) throw oErr;
       // Crear items (incluye producto_nombre para cumplir NOT NULL)

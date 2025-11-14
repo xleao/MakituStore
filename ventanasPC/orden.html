@@ -150,9 +150,17 @@ async function loadOrder(){
   if(orden.metodo_pago === 'YAPE'){
     pay.innerHTML = `
       <div class="flex w-full grow flex-col gap-4">
-        <div><p class="text-lg font-bold">¡Paga fácil con Yape!</p><p class="text-sm">Escanea este código QR</p></div>
-        <div class="w-full bg-gray-200 dark:bg-gray-700 aspect-square rounded-lg flex items-center justify-center"><span class="material-symbols-outlined text-5xl text-gray-400">qr_code_2</span></div>
-        <p class="text-sm">Abre tu app Yape, escanea el código y realiza el pago. Envía el comprobante.</p>
+        <div>
+          <p class="text-lg font-bold">¡Paga fácil con Yape!</p>
+          <p class="text-sm">Escanea el código o envía el pago directamente.</p>
+        </div>
+        <button type="button" data-yape-full class="w-full bg-gray-200 dark:bg-gray-700 aspect-square rounded-lg flex items-center justify-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/60">
+          <img src="img/yape.jpg" alt="Código Yape" class="w-full h-full object-contain"/>
+        </button>
+        <div class="space-y-1 text-sm">
+          <p>1. Yapea al código mostrado o al número <span class="font-bold">943 836 076</span>.</p>
+          <p>2. Envía el comprobante de pago por Yape al mismo número <span class="font-bold">943 836 076</span> para que podamos confirmar tu compra.</p>
+        </div>
       </div>`;
   } else {
     pay.innerHTML = `
@@ -224,6 +232,29 @@ window.addEventListener('DOMContentLoaded', async ()=>{
   const ok = await Auth.requireAuth();
   if(!ok) return;
   loadOrder();
+  // Lightbox para Yape (inicializar después de que exista el DOM)
+  const yOverlay = document.getElementById('yape-lightbox');
+  const yClose = document.getElementById('yape-lightbox-close');
+  function hideYape(){ yOverlay?.classList.add('hidden'); }
+  yClose?.addEventListener('click', (e)=>{ e.preventDefault(); hideYape(); });
+  yOverlay?.addEventListener('click', (e)=>{ if(e.target===yOverlay) hideYape(); });
+  document.getElementById('pay-panel')?.addEventListener('click', (e)=>{
+    const btn = e.target.closest('[data-yape-full]');
+    if(!btn || !yOverlay) return;
+    yOverlay.classList.remove('hidden');
+  });
 });
 </script>
+<!-- Lightbox Yape -->
+<div id="yape-lightbox" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+  <div class="relative max-w-sm w-full px-4">
+    <button id="yape-lightbox-close" class="absolute -top-3 right-4 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow flex items-center justify-center text-gray-700">
+      <span class="material-symbols-outlined text-base">close</span>
+    </button>
+    <div class="bg-white rounded-2xl p-4 shadow-xl flex flex-col items-center gap-3">
+      <img src="img/yape.jpg" alt="Código Yape ampliado" class="w-full max-h-[60vh] object-contain rounded-xl"/>
+      <p class="text-sm text-gray-700">Número Yape: <span class="font-bold">943 836 076</span></p>
+    </div>
+  </div>
+</div>
 </body></html>

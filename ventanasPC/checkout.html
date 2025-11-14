@@ -134,18 +134,23 @@ async function initCheckout(){
       // Verificar si ya existe una orden pendiente para este usuario
       const { data:pend } = await supabaseClient
         .from('ordenes')
-        .select('id, estado')
+        .select('id, estado, vence_en')
         .eq('usuario_id', uid)
         .eq('estado', 'pendiente')
         .order('id', { ascending: false })
         .limit(1)
         .maybeSingle();
       if(pend){
-        pendOrderId = pend.id;
-        if(pendMsg){ pendMsg.textContent = 'Ya tienes una orden pendiente. Espera a que se confirme o expire antes de crear otra.'; }
-        if(pendModal){ pendModal.classList.remove('hidden'); }
-        btn.disabled = false; btn.textContent = 'Confirmar y generar orden';
-        return;
+        const vencMs = pend.vence_en ? new Date(pend.vence_en).getTime() : null;
+        const nowMs = Date.now();
+        const siguePendiente = String(pend.estado||'').toLowerCase()==='pendiente' && (!vencMs || vencMs > nowMs);
+        if(siguePendiente){
+          pendOrderId = pend.id;
+          if(pendMsg){ pendMsg.textContent = 'Ya tienes una orden pendiente. Espera a que se confirme o expire antes de crear otra.'; }
+          if(pendModal){ pendModal.classList.remove('hidden'); }
+          btn.disabled = false; btn.textContent = 'Confirmar y generar orden';
+          return;
+        }
       }
       // Crear nueva orden pendiente
       const vence = new Date(Date.now()+20*60*1000).toISOString();

@@ -95,7 +95,21 @@ async function initCheckout(){
       if(!uid){ throw new Error('Sesión inválida'); }
       // Guardar datos del usuario
       await supabaseClient.from('usuarios').upsert({ id: uid, nombre, telefono }, { onConflict: 'id' });
-      // Crear orden
+      // Verificar si ya existe una orden pendiente para este usuario
+      const { data:pend } = await supabaseClient
+        .from('ordenes')
+        .select('id, estado')
+        .eq('usuario_id', uid)
+        .eq('estado', 'pendiente')
+        .order('id', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if(pend){
+        alert('Ya tienes una orden pendiente. Espera a que se confirme o expire antes de crear otra.');
+        location.href = `orden.html?id=${pend.id}`;
+        return;
+      }
+      // Crear nueva orden pendiente
       const vence = new Date(Date.now()+20*60*1000).toISOString();
       const { data:orden, error:oErr } = await supabaseClient.from('ordenes').insert({ usuario_id: uid, estado: 'pendiente', metodo_pago: metodo, total, vence_en: vence }).select().single();
       if(oErr) throw oErr;

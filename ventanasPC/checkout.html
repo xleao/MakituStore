@@ -46,7 +46,31 @@
 </div>
 </div>
 </div>
+</div>
 </main>
+</div>
+<!-- Modal orden pendiente -->
+<div id="pend-order-modal" class="hidden fixed inset-0 z-50">
+  <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl bg-white shadow-xl border">
+      <div class="px-5 py-4 border-b flex items-center justify-between">
+        <h3 class="font-bold text-lg">Tienes una orden pendiente</h3>
+        <button id="pend-order-close" class="h-8 w-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
+          <span class="material-symbols-outlined text-base">close</span>
+        </button>
+      </div>
+      <div class="p-5 space-y-3">
+        <p id="pend-order-msg" class="text-sm text-gray-700">Ya tienes una orden pendiente. Espera a que se confirme o expire antes de crear otra.</p>
+        <p class="text-xs text-gray-500">Puedes revisar el estado y los detalles de tu orden actual antes de hacer un nuevo pedido.</p>
+      </div>
+      <div class="px-5 pb-5 flex flex-col sm:flex-row gap-3 justify-end">
+        <button id="pend-order-go" class="flex-1 sm:flex-none inline-flex items-center justify-center rounded-full h-10 px-4 text-sm font-bold bg-primary text-white hover:bg-primary/90">
+          Ver mi orden
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 <script>
 function s(n){return `S/ ${(n||0).toFixed(2)}`}
@@ -79,6 +103,18 @@ async function initCheckout(){
   renderResumen();
 
   const btn = document.getElementById('confirmar');
+  const pendModal = document.getElementById('pend-order-modal');
+  const pendMsg = document.getElementById('pend-order-msg');
+  const pendGoBtn = document.getElementById('pend-order-go');
+  const pendCloseBtn = document.getElementById('pend-order-close');
+  let pendOrderId = null;
+  pendCloseBtn?.addEventListener('click', ()=>{
+    pendModal?.classList.add('hidden');
+  });
+  pendGoBtn?.addEventListener('click', ()=>{
+    if(pendOrderId){ location.href = `orden.html?id=${pendOrderId}`; }
+  });
+
   btn.addEventListener('click', async ()=>{
     const nombre = document.getElementById('nombre').value.trim();
     const telefono = document.getElementById('telefono').value.trim();
@@ -105,8 +141,10 @@ async function initCheckout(){
         .limit(1)
         .maybeSingle();
       if(pend){
-        alert('Ya tienes una orden pendiente. Espera a que se confirme o expire antes de crear otra.');
-        location.href = `orden.html?id=${pend.id}`;
+        pendOrderId = pend.id;
+        if(pendMsg){ pendMsg.textContent = 'Ya tienes una orden pendiente. Espera a que se confirme o expire antes de crear otra.'; }
+        if(pendModal){ pendModal.classList.remove('hidden'); }
+        btn.disabled = false; btn.textContent = 'Confirmar y generar orden';
         return;
       }
       // Crear nueva orden pendiente

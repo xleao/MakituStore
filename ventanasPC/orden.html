@@ -152,14 +152,14 @@ async function loadOrder(){
       <div class="flex w-full grow flex-col gap-4">
         <div>
           <p class="text-lg font-bold">¡Paga fácil con Yape!</p>
-          <p class="text-sm">Escanea el código y envía el pago directamente.</p>
+          <p class="text-sm">Escanea el código o envía el pago directamente.</p>
         </div>
         <button type="button" data-yape-full class="w-full bg-gray-200 dark:bg-gray-700 aspect-square rounded-lg flex items-center justify-center overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary/60">
           <img src="img/yape.jpg" alt="Código Yape" class="w-full h-full object-contain"/>
         </button>
         <div class="space-y-1 text-sm">
           <p>1. Yapea al código mostrado o al número <span class="font-bold">943 836 076 - Jhostin L. Rodriguez N</span>.</p>
-          <p>2. Envía el comprobante de pago por WhatsApp al mismo número <span class="font-bold">943 836 076</span> para que podamos confirmar tu compra.</p>
+          <p>2. Envía el comprobante de pago por Yape al mismo número <span class="font-bold">943 836 076</span> para que podamos confirmar tu compra.</p>
         </div>
       </div>`;
   } else {
@@ -188,7 +188,7 @@ async function loadOrder(){
     }
   }catch{}
   list.innerHTML = withImgs.map(it=>`<div class='flex items-center gap-4 p-4'>
-    <img class='w-16 h-16 rounded-md object-cover bg-gray-100' src='${it.imagen_url||''}' alt='${it.producto_nombre||""}'/>
+    <img class='w-16 h-16 rounded-md object-cover bg-gray-100 cursor-zoom-in' data-prod-full src='${it.imagen_url||''}' alt='${it.producto_nombre||""}'/>
     <div class='flex-grow'><p class='font-bold'>${it.producto_nombre||''}</p><p class='text-sm'>Cantidad: ${it.cantidad}</p></div>
     <p class='font-bold'>${s((Number(it.precio_unitario)||0)*(it.cantidad||0))}</p>
   </div>`).join('');
@@ -231,7 +231,7 @@ async function loadOrder(){
 window.addEventListener('DOMContentLoaded', async ()=>{
   const ok = await Auth.requireAuth();
   if(!ok) return;
-  loadOrder();
+  await loadOrder();
   // Lightbox para Yape (inicializar después de que exista el DOM)
   const yOverlay = document.getElementById('yape-lightbox');
   const yClose = document.getElementById('yape-lightbox-close');
@@ -242,6 +242,20 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     const btn = e.target.closest('[data-yape-full]');
     if(!btn || !yOverlay) return;
     yOverlay.classList.remove('hidden');
+  });
+  // Lightbox para productos
+  const pOverlay = document.getElementById('product-lightbox');
+  const pImg = document.getElementById('product-lightbox-img');
+  const pClose = document.getElementById('product-lightbox-close');
+  function hideProd(){ pOverlay?.classList.add('hidden'); }
+  pClose?.addEventListener('click', (e)=>{ e.preventDefault(); hideProd(); });
+  pOverlay?.addEventListener('click', (e)=>{ if(e.target===pOverlay) hideProd(); });
+  document.getElementById('o-items')?.addEventListener('click', (e)=>{
+    const img = e.target.closest('img[data-prod-full]');
+    if(!img || !pOverlay || !pImg) return;
+    pImg.src = img.getAttribute('src') || '';
+    pImg.alt = img.getAttribute('alt') || '';
+    pOverlay.classList.remove('hidden');
   });
 });
 </script>
@@ -254,6 +268,17 @@ window.addEventListener('DOMContentLoaded', async ()=>{
     <div class="bg-white rounded-2xl p-4 shadow-xl flex flex-col items-center gap-3">
       <img src="img/yape.jpg" alt="Código Yape ampliado" class="w-full max-h-[60vh] object-contain rounded-xl"/>
       <p class="text-sm text-gray-700">Número Yape: <span class="font-bold">943 836 076</span></p>
+    </div>
+  </div>
+</div>
+<!-- Lightbox producto -->
+<div id="product-lightbox" class="hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center">
+  <div class="relative max-w-sm w-full px-4">
+    <button id="product-lightbox-close" class="absolute -top-3 right-4 h-8 w-8 rounded-full bg-white/90 hover:bg-white shadow flex items-center justify-center text-gray-700">
+      <span class="material-symbols-outlined text-base">close</span>
+    </button>
+    <div class="bg-white rounded-2xl p-4 shadow-xl flex flex-col items-center gap-3">
+      <img id="product-lightbox-img" src="" alt="Producto" class="w-full max-h-[60vh] object-contain rounded-xl"/>
     </div>
   </div>
 </div>
